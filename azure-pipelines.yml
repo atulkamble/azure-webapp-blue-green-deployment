@@ -3,10 +3,11 @@ trigger:
 
 variables:
   azureSubscription: 'Azure-Service-Connection'
-  webAppName: 'bg-webapp-atul'
-  resourceGroupName: 'rg-bluegreen-demo'
+  webAppName: 'mywebappatul98600'
+  resourceGroupName: 'bluegreen'
   slotName: 'staging'
   artifactName: 'drop'
+  nodeVersion: '24.x'
 
 stages:
 
@@ -20,16 +21,52 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - task: ArchiveFiles@2
+    # Use Node.js 24 LTS
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
       inputs:
-        rootFolderOrFile: '$(Build.SourcesDirectory)'
+        versionSpec: $(nodeVersion)
+
+    # Install dependencies
+    - script: |
+        npm install
+      displayName: 'npm install'
+
+    # Run tests (if available)
+    - script: |
+        npm test
+      displayName: 'Run tests'
+      continueOnError: true
+
+    # Copy files for deployment
+    - task: CopyFiles@2
+      displayName: 'Copy Files to Staging'
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)'
+        Contents: |
+          **/*
+          !node_modules/**
+          !.git/**
+          !.gitignore
+          !azure-pipelines.yml
+          !README.md
+          !.vscode/**
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/app'
+
+    # Archive application
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/app'
         includeRootFolder: false
         archiveType: zip
         archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
         replaceExistingArchive: true
 
+    # Publish artifact
     - publish: '$(Build.ArtifactStagingDirectory)'
       artifact: $(artifactName)
+      displayName: 'Publish Artifact'
 
 # =========================
 # DEPLOY TO GREEN (STAGING)
@@ -45,14 +82,38 @@ stages:
     - download: current
       artifact: $(artifactName)
 
+    # Deploy to staging slot (Green environment)
     - task: AzureWebApp@1
+      displayName: 'Deploy to Staging Slot'
       inputs:
         azureSubscription: $(azureSubscription)
+        appType: 'webAppLinux'
         appName: $(webAppName)
         deployToSlotOrASE: true
         resourceGroupName: $(resourceGroupName)
         slotName: $(slotName)
         package: '$(Pipeline.Workspace)/$(artifactName)/app.zip'
+        runtimeStack: 'NODE|24-lts'
+        startUpCommand: 'npm start'
+    
+    # Health check after deployment
+    - script: |
+        echo "Waiting for staging slot to be ready..."
+        sleep 30
+        STAGING_URL="https://$(webAppName)-$(slotName).azurewebsites.net/health"
+        echo "Checking health at: $STAGING_URL"
+        for i in {1..10}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $STAGING_URL)
+          if [ $STATUS -eq 200 ]; then
+            echo "✓ Health check passed (Status: $STATUS)"
+            exit 0
+          fi
+          echo "Attempt $i: Status $STATUS, retrying..."
+          sleep 10
+        done
+        echo "✗ Health check failed after 10 attempts"
+        exit 1
+      displayName: 'Health Check - Staging Slot'
 
 # =========================
 # MANUAL APPROVAL (OPTIONAL)
@@ -66,21 +127,50 @@ stages:
     steps:
     - task: ManualValidation@0
       inputs:
-        instructions: 'Verify staging slot before production swap'
+        instructions: |
+          Please verify the staging environment before swapping to production:
+          
+          Staging URL: https://$(webAppName)-$(slotName).azurewebsites.net
+          Health Check: https://$(webAppName)-$(slotName).azurewebsites.net/health
+          API Info: https://$(webAppName)-$(slotName).azurewebsites.net/api/info
+          
+          If everything looks good, approve to proceed with the swap.
         timeoutInMinutes: 60
 
 # =========================
 # SWAP GREEN → BLUE
 # =========================
 - stage: Swap_To_Production
-  displayName: Swap Staging with Production
-  dependsOn: Approval
-  jobs:
-  - job: SwapSlot
-    pool:
-      vmImage: ubuntu-latest
-    steps:
+  di# Swap staging slot to production
     - task: AzureAppServiceManage@0
+      displayName: 'Swap Slots (Green → Blue)'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        Action: 'Swap Slots'
+        WebAppName: $(webAppName)
+        ResourceGroupName: $(resourceGroupName)
+        SourceSlot: $(slotName)
+        SwapWithProduction: true
+
+    # Verify production after swap
+    - script: |
+        echo "Waiting for production slot to be ready..."
+        sleep 30
+        PROD_URL="https://$(webAppName).azurewebsites.net/health"
+        echo "Checking health at: $PROD_URL"
+        for i in {1..10}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $PROD_URL)
+          if [ $STATUS -eq 200 ]; then
+            echo "✓ Production health check passed (Status: $STATUS)"
+            echo "Deployment successful! App is live at: https://$(webAppName).azurewebsites.net"
+            exit 0
+          fi
+          echo "Attempt $i: Status $STATUS, retrying..."
+          sleep 10
+        done
+        echo "✗ Production health check failed after swap"
+        exit 1
+      displayName: 'Health Check - Production Slot'e@0
       inputs:
         azureSubscription: $(azureSubscription)
         Action: 'Swap Slots'

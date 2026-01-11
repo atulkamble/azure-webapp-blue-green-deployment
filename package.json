@@ -1,0 +1,24 @@
+{
+  "name": "azure-webapp-blue-green-deployment",
+  "version": "1.0.0",
+  "description": "Azure Web App with Blue-Green Deployment",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "keywords": [
+    "azure",
+    "webapp",
+    "blue-green-deployment"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.22.1"
+  }
+}

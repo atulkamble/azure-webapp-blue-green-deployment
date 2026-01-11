@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Web App - Blue-Green Deployment</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M20 10L30 20L20 30L10 20L20 10Z" fill="white"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#667eea"/>
+                            <stop offset="100%" stop-color="#764ba2"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1>Azure Web App</h1>
+            </div>
+            <div class="status-badge" id="statusBadge">
+                <span class="dot"></span>
+                <span>Loading...</span>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h2>Blue-Green Deployment</h2>
+                <p>Zero-downtime deployments with seamless environment switching</p>
+            </section>
+
+            <section class="info-cards">
+                <div class="card">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <h3>Environment</h3>
+                    <p id="environment">-</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <h3>Node Version</h3>
+                    <p id="nodeVersion">-</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                    </div>
+                    <h3>Version</h3>
+                    <p id="appVersion">-</p>
+                </div>
+            </section>
+
+            <section class="features">
+                <h3>Key Features</h3>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <span class="feature-icon">🔄</span>
+                        <div>
+                            <h4>Zero Downtime</h4>
+                            <p>Seamless deployments without service interruption</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🚀</span>
+                        <div>
+                            <h4>Fast Rollback</h4>
+                            <p>Instant rollback to previous version if needed</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <div>
+                            <h4>Traffic Control</h4>
+                            <p>Gradual traffic shifting between environments</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <div>
+                            <h4>Monitoring</h4>
+                            <p>Real-time health checks and performance metrics</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="api-section">
+                <h3>API Endpoints</h3>
+                <div class="endpoint">
+                    <span class="method">GET</span>
+                    <code>/</code>
+                    <span class="description">Application information</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method">GET</span>
+                    <code>/health</code>
+                    <span class="description">Health check status</span>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Node.js 24 LTS • Azure Web Apps • Express</p>
+        </footer>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
