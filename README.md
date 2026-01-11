@@ -1,5 +1,6 @@
 <div align="center">
-<h1>🚀 MyApp</h1>
+<h1>🚀 azure-webapp-blue-green-deployment
+</h1>
 <p><strong>Built with ❤️ by <a href="https://github.com/atulkamble">Atul Kamble</a></strong></p>
 
 <p>
