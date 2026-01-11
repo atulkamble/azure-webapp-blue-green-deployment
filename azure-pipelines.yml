@@ -82,6 +82,33 @@ stages:
     - download: current
       artifact: $(artifactName)
 
+    # Configure staging slot for Oryx build
+    - task: AzureAppServiceSettings@1
+      displayName: 'Configure Staging Slot App Settings'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appName: $(webAppName)
+        resourceGroupName: $(resourceGroupName)
+        slotName: $(slotName)
+        appSettings: |
+          [
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true",
+              "slotSetting": false
+            },
+            {
+              "name": "ENABLE_ORYX_BUILD",
+              "value": "true",
+              "slotSetting": false
+            },
+            {
+              "name": "NODE_ENV",
+              "value": "production",
+              "slotSetting": false
+            }
+          ]
+
     # Deploy to staging slot (Green environment)
     - task: AzureWebApp@1
       displayName: 'Deploy to Staging Slot'
@@ -98,21 +125,19 @@ stages:
     # Health check after deployment
     - script: |
         echo "Waiting for staging slot to be ready..."
-        sleep 60
+        sleep 30
         STAGING_URL="https://$(webAppName)-$(slotName).azurewebsites.net/health"
         echo "Checking health at: $STAGING_URL"
-        for i in {1..15}; do
+        for i in {1..10}; do
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" $STAGING_URL)
           if [ $STATUS -eq 200 ]; then
             echo "✓ Health check passed (Status: $STATUS)"
             exit 0
           fi
           echo "Attempt $i: Status $STATUS, retrying..."
-          sleep 15
+          sleep 10
         done
-        echo "✗ Health check failed after 15 attempts"
-        echo "Fetching app logs for debugging..."
-        curl -s "https://$(webAppName)-$(slotName).azurewebsites.net/" || true
+        echo "✗ Health check failed after 10 attempts"
         exit 1
       displayName: 'Health Check - Staging Slot'
 
