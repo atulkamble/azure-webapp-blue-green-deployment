@@ -74,7 +74,7 @@ Slot Swap (Green → Blue)
 
 ```bash
 az login
-az account set --subscription "<SUBSCRIPTION_ID>"
+az account set --subscription "50818730-e898-4bc4-bc35-d998af53d719"
 ```
 
 ---
@@ -83,7 +83,7 @@ az account set --subscription "<SUBSCRIPTION_ID>"
 
 ```bash
 az group create \
-  --name rg-bluegreen-demo \
+  --name bluegreen \
   --location eastus
 ```
 
@@ -93,9 +93,9 @@ az group create \
 
 ```bash
 az appservice plan create \
-  --name bg-appservice-plan \
-  --resource-group rg-bluegreen-demo \
-  --sku B1 \
+  --name appserviceplan \
+  --resource-group bluegreen \
+  --sku P0V3 \
   --is-linux
 ```
 
@@ -105,10 +105,10 @@ az appservice plan create \
 
 ```bash
 az webapp create \
-  --name bg-webapp-atul \
-  --resource-group rg-bluegreen-demo \
-  --plan bg-appservice-plan \
-  --runtime "PYTHON|3.10"
+  --name mywebappatul98600 \
+  --resource-group bluegreen \
+  --plan appserviceplan \
+  --runtime "NODE:24-lts"
 ```
 
 ---
@@ -117,8 +117,8 @@ az webapp create \
 
 ```bash
 az webapp deployment slot create \
-  --name bg-webapp-atul \
-  --resource-group rg-bluegreen-demo \
+  --name mywebappatul98600 \
+  --resource-group bluegreen \
   --slot staging
 ```
 
@@ -128,8 +128,8 @@ az webapp deployment slot create \
 
 ```bash
 az webapp config appsettings set \
-  --name bg-webapp-atul \
-  --resource-group rg-bluegreen-demo \
+  --name mywebappatul98600 \
+  --resource-group bluegreen \
   --slot staging \
   --settings ENVIRONMENT=STAGING
 ```
