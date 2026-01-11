@@ -32,10 +32,6 @@
 
 <strong>Version 1.0.0</strong> | <strong>Last Updated:</strong> January 2026
 </div>
-Below is a **complete, production-ready Blue-Green Deployment guide for Azure Web App using Azure Pipelines**, including **Azure CLI scripts**, **pipeline YAML**, and **clear step-by-step flow** that you can directly teach or implement.
-
-I’m aligning this with **real DevOps best practices** used in enterprises.
-
 ---
 
 ## 🟦🟩 Blue-Green Deployment – Azure Web App (Azure Pipelines)
