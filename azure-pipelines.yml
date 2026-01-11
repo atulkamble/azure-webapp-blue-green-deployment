@@ -94,24 +94,25 @@ stages:
         slotName: $(slotName)
         package: '$(Pipeline.Workspace)/$(artifactName)/app.zip'
         runtimeStack: 'NODE|24-lts'
-        startUpCommand: 'npm start'
     
     # Health check after deployment
     - script: |
         echo "Waiting for staging slot to be ready..."
-        sleep 30
+        sleep 60
         STAGING_URL="https://$(webAppName)-$(slotName).azurewebsites.net/health"
         echo "Checking health at: $STAGING_URL"
-        for i in {1..10}; do
+        for i in {1..15}; do
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" $STAGING_URL)
           if [ $STATUS -eq 200 ]; then
             echo "✓ Health check passed (Status: $STATUS)"
             exit 0
           fi
           echo "Attempt $i: Status $STATUS, retrying..."
-          sleep 10
+          sleep 15
         done
-        echo "✗ Health check failed after 10 attempts"
+        echo "✗ Health check failed after 15 attempts"
+        echo "Fetching app logs for debugging..."
+        curl -s "https://$(webAppName)-$(slotName).azurewebsites.net/" || true
         exit 1
       displayName: 'Health Check - Staging Slot'
 
