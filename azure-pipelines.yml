@@ -22,10 +22,10 @@ stages:
       vmImage: ubuntu-latest
     steps:
     # Use Node.js 24 LTS
-    - task: NodeTool@0
+    - task: UseNode@1
       displayName: 'Install Node.js'
       inputs:
-        versionSpec: $(nodeVersion)
+        version: $(nodeVersion)
 
     # Install dependencies
     - script: |
