@@ -4,7 +4,7 @@ trigger:
 variables:
   azureSubscription: 'Azure-Service-Connection'
   webAppName: 'atulkamble'
-  resourceGroupName: 'bluegreen'
+  resourceGroupName: 'webapp'
   slotName: 'staging'
   artifactName: 'drop'
   nodeVersion: '24.x'
