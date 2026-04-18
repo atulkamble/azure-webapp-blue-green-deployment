@@ -124,20 +124,20 @@ stages:
     
     # Health check after deployment
     - script: |
-        echo "Waiting for staging slot to be ready..."
-        sleep 30
+        echo "Waiting for staging slot to finish Oryx build and start..."
+        sleep 120
         STAGING_URL="https://$(webAppName)-$(slotName).azurewebsites.net/health"
         echo "Checking health at: $STAGING_URL"
-        for i in {1..10}; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $STAGING_URL)
+        for i in {1..20}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $STAGING_URL)
           if [ $STATUS -eq 200 ]; then
             echo "✓ Health check passed (Status: $STATUS)"
             exit 0
           fi
-          echo "Attempt $i: Status $STATUS, retrying..."
-          sleep 10
+          echo "Attempt $i: Status $STATUS, retrying in 15s..."
+          sleep 15
         done
-        echo "✗ Health check failed after 10 attempts"
+        echo "✗ Health check failed after 20 attempts"
         exit 1
       displayName: 'Health Check - Staging Slot'
 
