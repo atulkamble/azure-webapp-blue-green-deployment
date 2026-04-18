@@ -122,24 +122,66 @@ stages:
         package: '$(Pipeline.Workspace)/$(artifactName)/app.zip'
         runtimeStack: 'NODE|24-lts'
     
-    # Health check after deployment
-    - script: |
-        echo "Waiting for staging slot to finish Oryx build and start..."
-        sleep 120
-        STAGING_URL="https://$(webAppName)-$(slotName).azurewebsites.net/health"
-        echo "Checking health at: $STAGING_URL"
-        for i in {1..20}; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $STAGING_URL)
-          if [ $STATUS -eq 200 ]; then
-            echo "✓ Health check passed (Status: $STATUS)"
-            exit 0
-          fi
-          echo "Attempt $i: Status $STATUS, retrying in 15s..."
-          sleep 15
-        done
-        echo "✗ Health check failed after 20 attempts"
-        exit 1
+    # Diagnose and health-check the staging slot
+    - task: AzureCLI@2
       displayName: 'Health Check - Staging Slot'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "=== Checking if staging slot exists ==="
+          az webapp deployment slot list \
+            --name $(webAppName) \
+            --resource-group $(resourceGroupName) \
+            --query "[].name" -o tsv
+
+          echo ""
+          echo "=== Checking slot state ==="
+          az webapp show \
+            --name $(webAppName) \
+            --resource-group $(resourceGroupName) \
+            --slot $(slotName) \
+            --query "{state:state, defaultHostName:defaultHostName, enabled:enabled}" -o json
+
+          echo ""
+          echo "=== Fetching default hostname from Azure ==="
+          SLOT_HOST=$(az webapp show \
+            --name $(webAppName) \
+            --resource-group $(resourceGroupName) \
+            --slot $(slotName) \
+            --query "defaultHostName" -o tsv)
+          STAGING_URL="https://${SLOT_HOST}/health"
+          echo "Resolved health URL: $STAGING_URL"
+
+          echo ""
+          echo "=== DNS resolution check ==="
+          nslookup "$SLOT_HOST" || true
+
+          echo ""
+          echo "=== Waiting 60s for app to start ==="
+          sleep 60
+
+          echo "=== Starting health checks ==="
+          for i in {1..15}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$STAGING_URL")
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✓ Health check passed (Status: $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: Status $STATUS, retrying in 15s..."
+            if [ $i -eq 1 ]; then
+              echo "--- Verbose curl output for diagnostics ---"
+              curl -v --max-time 10 "$STAGING_URL" 2>&1 || true
+              echo "--- End verbose output ---"
+            fi
+            sleep 15
+          done
+          echo "✗ Health check failed after 15 attempts"
+          echo ""
+          echo "=== Recent app logs ==="
+          az webapp log tail --name $(webAppName) --resource-group $(resourceGroupName) --slot $(slotName) --timeout 5 2>&1 || true
+          exit 1
 
 # =========================
 # MANUAL APPROVAL (OPTIONAL)
